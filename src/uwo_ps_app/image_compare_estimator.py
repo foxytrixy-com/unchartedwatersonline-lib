@@ -6,7 +6,7 @@ from PIL import Image
 
 from uwo_ps_utils import market_rates_cropper as mrc
 
-class ImageCompareEstimator():
+class ImageCompareEstimator:
     ARROW_PIXEL_XY = (7, 7)
     ARROW_RGB = [(225, 129, 38), (160, 227, 37), (30, 227, 200)]
 
