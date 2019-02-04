@@ -61,7 +61,8 @@ def filepath2estimate():
     logging.basicConfig(level=logging.DEBUG)
 
     filepath = "/home/yerihyo/Downloads/1424950540855101629.png"
-    rate_list = MarketRateExtractor.filepath2rate_list(filepath)
+    marketplace_data = MarketRateExtractor.filepath2marketplace_data(filepath)
+    ptgs_data_list = MarketRateExtractor.marketplace_data2ptgs_data_list(marketplace_data)
 
 
     # estimator = ICE(ESTIMATOR_INPUTS)

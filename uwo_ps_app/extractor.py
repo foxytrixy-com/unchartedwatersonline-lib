@@ -10,12 +10,14 @@ from pprint import pformat
 from PIL import Image
 from nose.tools import assert_equal
 
-from foxlib.toolkits.builtin_toolkit import lfilter, lzip_strict, lmap
+from foxlib.toolkits.builtin_toolkit import lfilter, lzip_strict, lmap, izip_strict
 from foxlib.toolkits.collections_toolkit import l_singleton2obj
 from foxlib.toolkits.file_toolkit import filepath2utf8_readline
+from foxlib.toolkits.itertools_toolkit import lfilter_singleton
 from foxlib.toolkits.logger_toolkit import LoggerToolkit
 from foxlib.toolkits.pillow_toolkit import PillowToolkit
 # from uwo_ps_utils import market_rates_cropper as mrc
+from src.uwo_ps_app.towns_table import TOWNS_TABLE
 
 FILE_PATH = os.path.abspath(__file__)
 FILE_DIR = os.path.dirname(FILE_PATH)
@@ -37,12 +39,17 @@ class MarketRateExtractor:
     RGB_FRAME = (179, 179, 179,)
 
     ARROW_PIXEL_XY = (7, 7)
-    ARROW_RGB = [(225, 129, 38), (160, 227, 37), (30, 227, 200)]
+    ARROW_RGB_LIST = [(225, 129, 38), (160, 227, 37), (30, 227, 200)]
 
     GOODS_RESIZE = (8, 4)
 
     # IMGSIZE_TRADEGOOD = [38, 24]
     IMGSIZE_TRADEGOOD = [42, 24]
+    IMGSIZE_TOWN = [64, 15]
+    IMGSIZE_RATE_NUMBER = [26, 13]
+    IMGSIZE_ARROW = [13, 13]
+    IMGSIZE_RATE_BAR = [190, 1]
+
 
 
     @classmethod
@@ -50,19 +57,18 @@ class MarketRateExtractor:
         return list(filepath2utf8_readline(filepath))
 
     @classmethod
-    def filepath2bytes_list(cls, filepath, img_count):
+    def img2bytes_list(cls, img, img_count):
 
-        with Image.open(filepath) as img:
-            assert_equal(img.height % img_count, 0, pformat({"img.height":img.height, "img_count":img_count,}))
+        assert_equal(img.height % img_count, 0, pformat({"img.height":img.height, "img_count":img_count,}))
 
-            h_SINGLE = img.height // img_count
+        h_SINGLE = img.height // img_count
 
-            l = []
-            for i in range(img_count):
-                img_SINGLE = img.crop([0, i * h_SINGLE, img.width, (i + 1) * h_SINGLE])
-                l.append(img_SINGLE.tobytes())
-                img_SINGLE.close()
-            return l
+        l = []
+        for i in range(img_count):
+            img_SINGLE = img.crop([0, i * h_SINGLE, img.width, (i + 1) * h_SINGLE])
+            l.append(img_SINGLE.tobytes())
+            img_SINGLE.close()
+        return l
 
     @classmethod
     def imgdata2name(cls, imgdata):
@@ -92,15 +98,32 @@ class MarketRateExtractor:
     @lru_cache(maxsize=2)
     def imgdata_list_TRADEGOOD(cls):
         name_list = cls.filepath2label_list(cls.FILEPATH_GOODS_LABELS)
-        bytes_list = cls.filepath2bytes_list(cls.FILEPATH_GOODS_PNG, len(name_list))
+
+        img_TGs = PillowToolkit.filepath2img(cls.FILEPATH_GOODS_PNG)
+        bytes_list = cls.img2bytes_list(img_TGs, len(name_list))
+        return lzip_strict(name_list, bytes_list)
+
+    @classmethod
+    def filter_white(cls, c):
+        return c if c==255 else 0
+
+
+    @classmethod
+    @lru_cache(maxsize=2)
+    def imgdata_list_TOWN(cls):
+        name_list = cls.filepath2label_list(cls.FILEPATH_TOWNS_LABELS)
+
+        img_TOWNs = PillowToolkit.filepath2img(cls.FILEPATH_TOWNS_PNG)
+
+        bytes_list = cls.img2bytes_list(img_TOWNs.point(cls.filter_white), len(name_list))
         return lzip_strict(name_list, bytes_list)
 
     @classmethod
     @lru_cache(maxsize=2)
-    def imgdata_list_TOWNS(cls):
-        name_list = cls.filepath2label_list(cls.FILEPATH_TOWNS_LABELS)
-        bytes_list = cls.filepath2bytes_list(cls.FILEPATH_TOWNS_PNG, len(name_list))
-        return lzip_strict(name_list, bytes_list)
+    def label_list_TREND(cls):
+        name_list = cls.filepath2label_list(cls.FILEPATH_ARROWS_LABELS)
+        return name_list
+
 
     # @classmethod
     # def image_size2tradegood_point(cls, image_size):
@@ -149,7 +172,7 @@ class MarketRateExtractor:
     PHOTOFRAME_WIDTH = 1
     TRADEGOOD_OFFSET = 2
     @classmethod
-    def filepath2rate_list(cls, filepath):
+    def filepath2marketplace_data(cls, filepath):
         logger = LoggerToolkit.f_class2logger(cls.filepath2rate_list)
         logger.info({"filepath": filepath})
 
@@ -158,24 +181,68 @@ class MarketRateExtractor:
         xy_list = PillowToolkit.rgb_ll_rgb2xy_list(rgb_ll, cls.RGB_FRAME)
         photoframe_point_list = cls.xy_list2photoframe_point_list(xy_list)
 
-        tg_point = photoframe_point_list[0]
-        town_point_list = photoframe_point_list[1:]
+        photoframe_point_TG = photoframe_point_list[0]
+        photoframe_point_TOWN_list = photoframe_point_list[1:]
 
         offset = cls.PHOTOFRAME_WIDTH + cls.TRADEGOOD_OFFSET
-        img_TG = img.crop(PillowToolkit.point_size2bounds(lmap(lambda x:x+offset,tg_point), cls.IMGSIZE_TRADEGOOD))
+        name_TG = cls.img_point2name_TG(img,photoframe_point_TG)
+        name_TOWN_list = [cls.img_point2name_TOWN(img, photoframe_point_TOWN)
+                          for photoframe_point_TOWN in photoframe_point_TOWN_list]
 
-        name = cls.img2name(img_TG, cls.imgdata_list_TRADEGOOD())
-        raise Exception(name)
+        rate_list = [cls.img_point2rate(img, photoframe_point)
+                     for photoframe_point in photoframe_point_list]
+
+        trend_list = [cls.img_point2trend(img, photoframe_point)
+                          for photoframe_point in photoframe_point_list]
+
+        town = cls.neighbors2town(tuple(name_TOWN_list))
+        town_list_ALL = [town] + name_TOWN_list
+
+        return (name_TG,
+                town_list_ALL,
+                rate_list,
+                trend_list,
+                )
 
     @classmethod
-    def img2name_TG(cls, point):
-        data = im.resize(self.GOODS_RESIZE).tobytes()
-        try:
-            name = self.goods_labels[self.goods_data.index(data)]
-        except:
-            name = "WhatIsThis"
-        finally:
-            return name
+    def marketplace_data2ptgs_data_list(cls, marketplace_data):
+        (name_TG, town_list, rate_list, trend_list,) = marketplace_data
+
+        l = [(name_TG, town, rate, trend)
+             for town, rate, trend in izip_strict(town_list, rate_list, trend_list)]
+        return l
+
+    @classmethod
+    def img_point2name_TG(cls, img, photoframe_point_TG,):
+        offset = cls.PHOTOFRAME_WIDTH + cls.TRADEGOOD_OFFSET
+        img_TG = img.crop(
+            PillowToolkit.point_size2bounds(lmap(lambda x: x + offset, photoframe_point_TG), cls.IMGSIZE_TRADEGOOD))
+        name_TG = cls.img2name(img_TG, cls.imgdata_list_TRADEGOOD())
+        return name_TG
+
+    @classmethod
+    def img_point2name_TOWN(cls, img, photoframe_point_TOWN):
+        offset = (52, 6)
+        p = PillowToolkit.point_offset2move(photoframe_point_TOWN, offset)
+
+        img_TOWN = img.crop(PillowToolkit.point_size2bounds(p, cls.IMGSIZE_TOWN))
+        name_TOWN = cls.img2name(img_TOWN.point(cls.filter_white), cls.imgdata_list_TOWN())
+        return name_TOWN
+
+    @classmethod
+    def neighbors2town(cls, neighbors):
+        return TOWNS_TABLE.get(tuple(neighbors))
+
+
+    # @classmethod
+    # def img2name_TG(cls, point):
+    #     data = im.resize(self.GOODS_RESIZE).tobytes()
+    #     try:
+    #         name = self.goods_labels[self.goods_data.index(data)]
+    #     except:
+    #         name = "WhatIsThis"
+    #     finally:
+    #         return name
 
     @classmethod
     def rgb_ll2tradegood_point(cls, rgb_ll):
@@ -184,3 +251,60 @@ class MarketRateExtractor:
         photoframe_point_list = cls.xy_list2photoframe_point_list(xy_list)
         return photoframe_point_list[0]
 
+    @classmethod
+    def pixel2has_saturation(cls, pixel):
+        #_, rgb = pixels
+        return any([pixel[0] >= 75,
+                    pixel[1] >= 75,
+                    pixel[2] >= 75,
+                    ])
+
+
+    @classmethod
+    def img_point2rate(cls, img, photoframe_point):
+        offset = (53, 44)
+        p = PillowToolkit.point_offset2move(photoframe_point, offset)
+        img_RATE_BAR = img.crop(PillowToolkit.point_size2bounds(p, cls.IMGSIZE_RATE_BAR))
+
+        n_pixel_list_WITH_COLOR = lfilter(lambda n_pixel: cls.pixel2has_saturation(n_pixel[1]), img_RATE_BAR.getcolors())
+        count, pixel = l_singleton2obj(n_pixel_list_WITH_COLOR)
+        rate = count*2+6
+        return rate
+
+
+    # @classmethod
+    # def n_pixel_list2count_COLOR(cls, n_pixel_list, pivot_color):
+    #
+    #     count_COLOR = 0
+    #     for n,pixel in n_pixel_list:
+    #         PillowToolkit.rgb_pair2dist_squared(pixel, pivot_color) <
+
+    ARROW_PIXEL_XY = (7,7)
+    @classmethod
+    def img_point2trend(cls, img, photoframe_point):
+        offset = (228, 28)
+        p = PillowToolkit.point_offset2move(photoframe_point, offset)
+        img_ARROW = img.crop(PillowToolkit.point_size2bounds(p, cls.IMGSIZE_ARROW))
+        PillowToolkit.img2file(img_ARROW, "/home/yerihyo/tmp/a.png")
+
+        pixel = img_ARROW.getpixel(cls.ARROW_PIXEL_XY)
+
+        trend_count = len(cls.ARROW_RGB_LIST)
+        iTrend = min(range(trend_count),
+                     key=lambda i:PillowToolkit.rgb_pair2dist_squared(cls.ARROW_RGB_LIST[i],pixel))
+
+
+        str_TREND = cls.label_list_TREND()[iTrend]
+        return str_TREND
+
+    @classmethod
+    def rgb2count_nearby(cls, rgb, n_pixel_list,):
+        dist_thres = 3
+
+        n_SUM = 0
+        for n,pixel in n_pixel_list:
+            if PillowToolkit.rgb_pair2dist_squared(rgb,pixel)<=dist_thres**2:
+                continue
+            n_SUM += n
+
+        return n_SUM
