@@ -13,7 +13,7 @@ LOG_DIR=$WEB_DIR/log
 branch=`git branch | grep '\*' | awk '{print $2}'`
 
 git push origin $branch
-git checkout develop
+git checkout master
 git merge --no-ff $branch
-git push origin develop
+git push origin master
 git checkout $branch
