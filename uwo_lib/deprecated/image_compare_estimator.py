@@ -7,9 +7,10 @@ from itertools import product
 from operator import itemgetter as ig
 
 from PIL import Image
+from future.utils import lfilter, lmap
 from nose.tools import assert_equal
 
-from foxlib.toolkits.builtin_toolkit import lfilter, lzip_strict, lmap
+from foxlib.toolkits.builtin_toolkit import lzip_strict
 from foxlib.toolkits.collections_toolkit import l_singleton2obj
 from foxlib.toolkits.file_toolkit import filepath2utf8_readline
 from foxlib.toolkits.logger_toolkit import LoggerToolkit

@@ -7,16 +7,14 @@ from itertools import product
 from operator import itemgetter as ig
 from pprint import pformat
 
-from PIL import Image
+from future.utils import lfilter, lmap
 from nose.tools import assert_equal
 
-from foxlib.toolkits.builtin_toolkit import lfilter, lzip_strict, lmap, izip_strict
+from foxlib.toolkits.builtin_toolkit import lzip_strict, izip_strict
 from foxlib.toolkits.collections_toolkit import l_singleton2obj
 from foxlib.toolkits.file_toolkit import filepath2utf8_readline
-from foxlib.toolkits.itertools_toolkit import lfilter_singleton
 from foxlib.toolkits.logger_toolkit import LoggerToolkit
 from foxlib.toolkits.pillow_toolkit import PillowToolkit
-# from uwo_ps_utils import market_rates_cropper as mrc
 from src.uwo_ps_app.towns_table import TOWNS_TABLE
 
 FILE_PATH = os.path.abspath(__file__)
