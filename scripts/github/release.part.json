@@ -1,0 +1,7 @@
+{"tag_name": "v{{version}}",
+ "target_commitish": "master",
+ "name": "v{{version}}",
+ "body": "Release of version {{version}}",
+ "draft": false,
+ "prerelease": false
+}

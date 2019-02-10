@@ -1,9 +1,9 @@
 import setuptools
-
+from version import __version__
 
 setuptools.setup(
     name="unchartedwatersonline-lib",
-    version="0.1.1.1",
+    version=__version__,
     author="yerihyo",
     author_email="yerihyo@gmail.com",
     description="UWO price image reader",
