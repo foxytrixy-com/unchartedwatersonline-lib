@@ -10,10 +10,10 @@ from PIL import Image
 from future.utils import lfilter, lmap
 from nose.tools import assert_equal
 
-from foxlib.toolkits.builtin_toolkit import lzip_strict
-from foxlib.toolkits.collections_toolkit import l_singleton2obj
-from foxlib.toolkits.file_toolkit import filepath2utf8_readline
-from foxlib.toolkits.logger_toolkit import LoggerToolkit
+from foxylib.toolkits.builtin_toolkit import lzip_strict
+from foxylib.toolkits.collections_toolkit import l_singleton2obj
+from foxylib.toolkits.file_toolkit import filepath2utf8_readline
+from foxylib.toolkits.logger_toolkit import LoggerToolkit
 from uwo_ps_utils import market_rates_cropper as mrc
 from uwo_ps_utils.market_rates_cropper import PillowToolkit
 

@@ -9,8 +9,8 @@ BASE_DIR=$(dirname $SCRIPTS_DIR)
 PROJECTS_DIR=$(dirname $BASE_DIR)
 # UTILS_DIR=$PROJECTS_DIR/uwo_ps_utils
 
-PYTHONPATH=$PROJECTS_DIR/foxlib
+PYTHONPATH=$PROJECTS_DIR/foxylib
 
-# PYTHONPATH=$PYTHONPATH python3 $BASE_DIR/main.py
-python3 $BASE_DIR/main.py
+PYTHONPATH=$PYTHONPATH python3 $BASE_DIR/main.py
+# python3 $BASE_DIR/main.py
 
