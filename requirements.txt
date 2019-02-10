@@ -1,4 +1,5 @@
-pillow
+Pillow==5.4.1
 # git+https://github.com/ommokazza/uwo_ps_utils.git@master#egg=uwo_ps_utils
-git+git://github.com/foxytrixy-com/foxlib.git@0.2.1#egg=foxlib
-
+git+git://github.com/foxytrixy-com/foxylib.git@0.2.2#egg=foxylib
+future==0.17.1
+nose==1.3.7

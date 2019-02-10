@@ -3,18 +3,18 @@
 import os
 from collections import Counter
 from functools import lru_cache
-from itertools import product
 from operator import itemgetter as ig
 from pprint import pformat
 
 from future.utils import lfilter, lmap
+from itertools import product
 from nose.tools import assert_equal
 
-from foxlib.toolkits.builtin_toolkit import lzip_strict, izip_strict
-from foxlib.toolkits.collections_toolkit import l_singleton2obj
-from foxlib.toolkits.file_toolkit import filepath2utf8_readline
-from foxlib.toolkits.logger_toolkit import LoggerToolkit
-from foxlib.toolkits.pillow_toolkit import PillowToolkit
+from foxylib.toolkits.builtin_toolkit import lzip_strict, izip_strict
+from foxylib.toolkits.collections_toolkit import l_singleton2obj
+from foxylib.toolkits.file_toolkit import filepath2utf8_readline
+from foxylib.toolkits.logger_toolkit import LoggerToolkit
+from foxylib.toolkits.pillow_toolkit import PillowToolkit
 from src.uwo_ps_app.towns_table import TOWNS_TABLE
 
 FILE_PATH = os.path.abspath(__file__)
@@ -171,7 +171,7 @@ class MarketRateExtractor:
     TRADEGOOD_OFFSET = 2
     @classmethod
     def filepath2marketplace_data(cls, filepath):
-        logger = LoggerToolkit.f_class2logger(cls.filepath2rate_list)
+        logger = LoggerToolkit.f_class2logger(cls.filepath2marketplace_data)
         logger.info({"filepath": filepath})
 
         img = PillowToolkit.filepath2img(filepath)
