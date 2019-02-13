@@ -4,7 +4,7 @@ from pprint import pprint
 
 from PIL import Image
 
-from foxylib.toolkits.logger_toolkit import LoggerToolkit
+from foxylib.toolkits.logger_tools import LoggerToolkit
 # from uwo_ps_app.image_compare_estimator import ImageCompareEstimator as ICE
 
 from uwo_lib.extractor import MarketRateExtractor

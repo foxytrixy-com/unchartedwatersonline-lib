@@ -10,11 +10,11 @@ from future.utils import lfilter, lmap
 from itertools import product
 from nose.tools import assert_equal
 
-from foxylib.toolkits.builtin_toolkit import lzip_strict, izip_strict
-from foxylib.toolkits.collections_toolkit import l_singleton2obj
-from foxylib.toolkits.file_toolkit import filepath2utf8_readline
-from foxylib.toolkits.logger_toolkit import LoggerToolkit
-from foxylib.toolkits.pillow_toolkit import PillowToolkit
+from foxylib.native.builtin_tools import lzip_strict, izip_strict
+from foxylib.native.collections_tools import l_singleton2obj
+from foxylib.native.file_tools import filepath2utf8_readline
+from foxylib.native.logger_tools import LoggerToolkit
+from foxylib.pillow.pillow_tools import PillowToolkit
 from src.uwo_ps_app.towns_table import TOWNS_TABLE
 
 FILE_PATH = os.path.abspath(__file__)
